@@ -1,0 +1,66 @@
+.build-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 16em;
+  min-height: 8em;
+  max-height: 45vh;
+  color: var(--text-color);
+  background: var(--tool-panel-background-color, var(--base-background-color));
+}
+
+.build-panel > header {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--base-border-color);
+}
+
+.build-panel-title {
+  flex: 1;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.build-output {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  font-family: var(--editor-font-family, monospace);
+  font-size: var(--editor-font-size, 13px);
+  line-height: 1.45;
+  color: var(--text-color);
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.build-output-command {
+  color: var(--text-color-subtle);
+}
+
+.build-output-stderr {
+  color: var(--text-color-error, var(--text-color));
+}
+
+.build-status {
+  color: inherit;
+  background: none;
+  border: 0;
+}
+
+.build-status[data-state="running"] {
+  color: var(--text-color-info);
+}
+
+.build-status[data-state="passed"] {
+  color: var(--text-color-success);
+}
+
+.build-status[data-state="failed"] {
+  color: var(--text-color-error);
+}
