@@ -28,7 +28,7 @@
     "lumine": "^1.0.0"
   },
   "backgroundTips": [
-    "Run the active project target with {{ 'build:trigger' | keystroke }} and jump through matched diagnostics from the output"
+    "You can run the active project target with {{ 'build:trigger' | keystroke }}"
   ],
   "scripts": {
     "test": "lumine --test spec",
