@@ -27,8 +27,6 @@ module.exports = [
     languageOptions: {
       globals: {
         ...globals.jasmine,
-        waitsForPromise: "readonly",
-        runs: "readonly",
       },
     },
     rules: {
