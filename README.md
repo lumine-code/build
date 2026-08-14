@@ -13,7 +13,7 @@ Run project build targets and surface their output and diagnostics.
 
 ## Installation
 
-To install `build` search for _build_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/build`.
+To install `build` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/build`.
 
 ## Commands
 
@@ -62,10 +62,10 @@ Adjust the output surface in your `styles.css`:
 
 ## Services
 
-- **[build.provider](docs/build.provider.md)** (`^1.0.0`): consumed to discover targets supplied by language and tool packages.
-- **status-bar** (`^1.0.0`): consumed to show the active target and run state.
-- **busy-signal** (`^1.0.0`): consumed to report a target while its process is running.
-- **linter.registry** (`^1.0.0`): consumed to publish diagnostics parsed from output.
+- [`build.provider`](docs/build.provider.md): consumed to discover targets supplied by language and tool packages.
+- `status-bar`: consumed to show the active target and run state.
+- `busy-signal`: consumed to report a target while its process is running.
+- `linter.registry`: consumed to publish diagnostics parsed from output.
 
 ## Contributing
 
