@@ -49,6 +49,27 @@ describe("build", () => {
     expect(main.statusElement.dataset.state).toBe("passed");
   });
 
+  it("saves every non-unmodified text editor before building", async () => {
+    writeTarget({ name: "Save", cmd: "node", args: ["--version"] });
+    const pack = await lumine.packages.activatePackage("build");
+    main = pack.mainModule;
+    await main.refreshTargets();
+    lumine.config.set("build.saveOnBuild", true);
+
+    const editors = ["unmodified", "modified", "conflicted", "removed"].map((fileState) => ({
+      getFileState: () => fileState,
+      save: jasmine.createSpy(`save-${fileState}`).and.returnValue(Promise.resolve()),
+    }));
+    spyOn(lumine.workspace, "getTextEditors").and.returnValue(editors);
+    spyOn(main, "runTarget").and.returnValue("started");
+
+    expect(await main.runActiveTarget()).toBe("started");
+    expect(editors[0].save).not.toHaveBeenCalled();
+    expect(editors[1].save).toHaveBeenCalled();
+    expect(editors[2].save).toHaveBeenCalled();
+    expect(editors[3].save).toHaveBeenCalled();
+  });
+
   it("stops a running target and cleans up its process", async () => {
     writeTarget({ name: "Long", cmd: "node", args: ["-e", "setInterval(() => {}, 1000)"] });
     const pack = await lumine.packages.activatePackage("build");
