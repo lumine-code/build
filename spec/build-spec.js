@@ -139,6 +139,6 @@ describe("build", () => {
     await main.selectList.selectItem(targets[1]);
     expect((await main.selectList.confirmSelection()).status).toBe("success");
     expect(main.activeTarget).toBe(targets[1]);
-    expect(main.selectList.isVisible()).toBe(false);
+    expect(main.selectListHost.isVisible()).toBe(false);
   });
 });
