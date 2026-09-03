@@ -119,4 +119,26 @@ describe("build", () => {
     expect(main.panel.getText()).toContain("command-target");
     expect(main.statusElement.dataset.state).toBe("passed");
   });
+
+  it("loads and confirms the target picker through its source and primary action", async () => {
+    writeTarget([
+      { name: "First", cmd: "node", args: ["--version"] },
+      { name: "Second", cmd: "node", args: ["--version"] },
+    ]);
+    const pack = await lumine.packages.activatePackage("build");
+    main = pack.mainModule;
+
+    await main.selectTarget();
+    const targets = main.selectList.getItems();
+    expect(targets.map(({ name }) => name)).toEqual(["First", "Second"]);
+    expect(main.selectList.getSource().mode).toBe("snapshot");
+    expect(main.selectList.getItemId(targets[1])).toBe(
+      JSON.stringify([".lumine-build.json", "Second"]),
+    );
+
+    await main.selectList.selectItem(targets[1]);
+    expect((await main.selectList.confirmSelection()).status).toBe("success");
+    expect(main.activeTarget).toBe(targets[1]);
+    expect(main.selectList.isVisible()).toBe(false);
+  });
 });
