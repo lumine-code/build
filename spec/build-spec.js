@@ -111,7 +111,7 @@ describe("build", () => {
     await main.refreshTargets();
     expect(main.activeTarget?.commandName).toBe("spec:run-target");
 
-    lumine.commands.dispatch(workspaceElement, "spec:run-target");
+    await lumine.commands.dispatch(workspaceElement, "spec:run-target");
     const child = main.activeProcess;
     expect(child).not.toBeNull();
     await closed(child);
