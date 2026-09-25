@@ -27,9 +27,6 @@
   "engines": {
     "lumine": "^1.0.0"
   },
-  "backgroundTips": [
-    "You can run the active project target with {{ 'build:trigger' | keystroke }}"
-  ],
   "scripts": {
     "test": "lumine --test spec",
     "lint": "eslint . --max-warnings 0",
@@ -103,6 +100,13 @@
       "description": "Set the placement priority of the status-bar indicator.",
       "type": "integer",
       "default": 100
+    }
+  },
+  "providedServices": {
+    "background-tips.provider": {
+      "versions": {
+        "1.0.0": "provideBackgroundTips"
+      }
     }
   },
   "consumedServices": {
