@@ -35,6 +35,22 @@ describe("build", () => {
     await lumine.packages.deactivatePackage("build");
   });
 
+  it("closes the output panel from its focused output without closing the editor", async () => {
+    const editor = await lumine.workspace.open();
+    const pack = await lumine.packages.activatePackage("build");
+    const panel = pack.mainModule.ensurePanel();
+    panel.show();
+    panel.append("retained build output", "stdout");
+    spyOn(lumine.workspace, "closeActivePaneItemOrEmptyPaneOrWindow");
+
+    await lumine.commands.dispatch(panel.output, "core:close");
+
+    expect(panel.panel.isVisible()).toBe(false);
+    expect(panel.getText()).toBe("retained build output");
+    expect(lumine.workspace.closeActivePaneItemOrEmptyPaneOrWindow).not.toHaveBeenCalled();
+    expect(editor.isDestroyed()).toBe(false);
+  });
+
   it("runs a project target and streams its output", async () => {
     writeTarget({ name: "Echo", cmd: "node", args: ["-e", "console.log('build-complete')"] });
     const pack = await lumine.packages.activatePackage("build");
