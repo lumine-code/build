@@ -93,7 +93,7 @@
       "title": "Status Bar Indicator",
       "description": "Show the active target and its current state in the status bar.",
       "type": "boolean",
-      "default": true
+      "default": false
     },
     "statusBarPriority": {
       "title": "Status Bar Priority",
