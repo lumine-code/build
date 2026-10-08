@@ -155,4 +155,136 @@ describe("build", () => {
     expect(main.activeTarget).toBe(targets[1]);
     expect(main.selectListHost.isVisible()).toBe(false);
   });
+
+  describe("pending build ownership", () => {
+    const deferred = () => {
+      let resolve, reject;
+      const promise = new Promise((yes, no) => {
+        resolve = yes;
+        reject = no;
+      });
+      return { promise, resolve, reject };
+    };
+
+    beforeEach(async () => {
+      writeTarget({ name: "Pending", cmd: "node", args: ["--version"] });
+      ({ mainModule: main } = await lumine.packages.activatePackage("build"));
+      await main.refreshTargets();
+      main.linter = null;
+    });
+
+    it("does not start after deactivation while linter discovery waits", async () => {
+      const service = deferred();
+      spyOn(lumine.packages, "requestService").and.returnValue(service.promise);
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      const pending = main.runActiveTarget();
+      await lumine.packages.deactivatePackage("build");
+      service.resolve();
+      expect(await pending).toBeNull();
+      expect(run).not.toHaveBeenCalled();
+      expect(main.panel).toBeNull();
+    });
+
+    it("does not start after deactivation while the editor save waits", async () => {
+      const sourcePath = path.join(directory, "source.js");
+      fs.writeFileSync(sourcePath, "old text");
+      const editor = await lumine.workspace.open(sourcePath);
+      editor.setText("new text");
+      const saving = deferred();
+      const saveStarted = deferred();
+      const save = spyOn(editor, "save").and.callFake(() => {
+        saveStarted.resolve();
+        return saving.promise;
+      });
+      spyOn(lumine.packages, "requestService").and.resolveTo();
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      lumine.config.set("build.saveOnBuild", true);
+      const pending = main.runActiveTarget();
+      await saveStarted.promise;
+      expect(save).toHaveBeenCalledTimes(1);
+      await lumine.packages.deactivatePackage("build");
+      saving.resolve();
+      expect(await pending).toBeNull();
+      expect(run).not.toHaveBeenCalled();
+    });
+
+    it("owns only one start while service discovery is pending", async () => {
+      const service = deferred();
+      spyOn(lumine.packages, "requestService").and.returnValue(service.promise);
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      const first = main.runActiveTarget();
+      const second = main.runActiveTarget();
+      service.resolve();
+      expect(await first).toBe("started");
+      expect(await second).toBeNull();
+      expect(run).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not clear or start a replacement activation's pending build", async () => {
+      const oldService = deferred();
+      const newService = deferred();
+      const discovery = spyOn(lumine.packages, "requestService").and.returnValues(
+        oldService.promise,
+        newService.promise,
+      );
+      const oldMain = main;
+      const oldRun = spyOn(oldMain, "runTarget").and.returnValue("started");
+      const oldPending = oldMain.runActiveTarget();
+      await lumine.packages.deactivatePackage("build");
+      ({ mainModule: main } = await lumine.packages.activatePackage("build"));
+      await main.refreshTargets();
+      main.linter = null;
+      const run = main === oldMain ? oldRun : spyOn(main, "runTarget").and.returnValue("started");
+      const pending = main.runActiveTarget();
+      oldService.resolve();
+      expect(await oldPending).toBeNull();
+      const repeated = main.runActiveTarget();
+      newService.resolve();
+      expect(await pending).toBe("started");
+      expect(await repeated).toBeNull();
+      expect(discovery).toHaveBeenCalledTimes(2);
+      expect(run).toHaveBeenCalledTimes(1);
+    });
+
+    it("ignores an obsolete discovery failure after deactivation", async () => {
+      const service = deferred();
+      spyOn(lumine.packages, "requestService").and.returnValue(service.promise);
+      const run = spyOn(main, "runTarget");
+      const pending = main.runActiveTarget();
+      const settled = pending.then(
+        (value) => ({ value }),
+        (error) => ({ error }),
+      );
+      await lumine.packages.deactivatePackage("build");
+      service.reject(new Error("Old linter failed"));
+      expect(await settled).toEqual({ value: null });
+      expect(run).not.toHaveBeenCalled();
+    });
+
+    it("preserves a current discovery failure and allows a later retry", async () => {
+      const error = new Error("Current linter failed");
+      const discovery = spyOn(lumine.packages, "requestService").and.rejectWith(error);
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      await expectAsync(main.runActiveTarget()).toBeRejectedWith(error);
+      discovery.and.resolveTo();
+      expect(await main.runActiveTarget()).toBe("started");
+      expect(run).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not recursively queue another build from its own save", async () => {
+      const sourcePath = path.join(directory, "source.js");
+      fs.writeFileSync(sourcePath, "old text");
+      const editor = await lumine.workspace.open(sourcePath);
+      editor.setText("new text");
+      spyOn(lumine.packages, "requestService").and.resolveTo();
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      const warnings = spyOn(lumine.notifications, "addWarning");
+      lumine.config.set("build.saveOnBuild", true);
+      lumine.config.set("build.buildOnSave", true);
+      expect(await main.runActiveTarget()).toBe("started");
+      expect(fs.readFileSync(sourcePath, "utf8")).toBe("new text");
+      expect(run).toHaveBeenCalledTimes(1);
+      expect(warnings).not.toHaveBeenCalled();
+    });
+  });
 });
