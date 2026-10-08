@@ -2,6 +2,8 @@
 
 Run project build targets and surface their output and diagnostics.
 
+Fork of [noseglid/atom-build](https://github.com/noseglid/atom-build).
+
 ## Features
 
 - **Project targets**: loads safe JSON or YAML target definitions from the project root.
