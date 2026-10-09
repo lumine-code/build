@@ -151,8 +151,10 @@ describe("Build consumed service ownership", () => {
   it("does not use a copied retired editor observation callback", async () => {
     await lumine.packages.deactivatePackage("build");
     let retired = false;
-    const earlier = lumine.workspace.observeTextEditors(() => {
+    let onDidSave;
+    const earlier = lumine.workspace.observeTextEditors((editor) => {
       if (!retired) {
+        onDidSave = spyOn(editor, "onDidSave").and.callThrough();
         retired = true;
         main.deactivate();
       }
@@ -161,6 +163,7 @@ describe("Build consumed service ownership", () => {
     try {
       const editor = await lumine.workspace.open();
       expect(retired).toBe(true);
+      expect(onDidSave).not.toHaveBeenCalled();
       editor.destroy();
     } finally {
       earlier.dispose();
