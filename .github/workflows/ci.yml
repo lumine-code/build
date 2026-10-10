@@ -53,6 +53,10 @@ jobs:
         shell: bash
     env:
       LUMINE_JASMINE_REPORTER: list
+      LUMINE_DISABLE_SHELLING_OUT_FOR_ENVIRONMENT: "true"
+      TEMP: ${{ github.workspace }}/.build-runtime/tmp
+      TMP: ${{ github.workspace }}/.build-runtime/tmp
+      TMPDIR: ${{ github.workspace }}/.build-runtime/tmp
     steps:
       - uses: actions/checkout@v7
         with:
@@ -73,7 +77,9 @@ jobs:
           sudo apt-get install -y xvfb libx11-dev libxkbfile-dev libsecret-1-dev
       - name: Install package dependencies
         working-directory: build
-        run: npm ci --ignore-scripts
+        run: |
+          mkdir -p "$TEMP"
+          npm ci --ignore-scripts
       - name: Install declared spec packages
         run: node lumine/script/install-spec-packages.js --package build --home "$RUNNER_TEMP/build-home" --github-env "$GITHUB_ENV"
       - name: Install editor dependencies
@@ -91,10 +97,6 @@ jobs:
         working-directory: lumine
         timeout-minutes: 20
         run: |
-          export TEMP="$RUNNER_TEMP/build-temp"
-          export TMP="$TEMP"
-          export TMPDIR="$TEMP"
-          mkdir -p "$TEMP"
           if [ "$RUNNER_OS" = Linux ]; then
             xvfb-run --auto-servernum npm start -- --test ../build/spec
           else
