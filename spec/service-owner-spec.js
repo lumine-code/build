@@ -1,3 +1,4 @@
+const windowService = require("./helpers/window-service");
 const { Disposable } = require("lumine");
 
 describe("Build consumed service ownership", () => {
@@ -27,10 +28,18 @@ describe("Build consumed service ownership", () => {
   });
 
   function consume(service, method) {
-    consumers.push(hub.consume(service, "^1.0.0", (value) => main[method](value)));
+    consumers.push(
+      hub.consume(service, service === "status-bar" ? "^2.0.0" : "^1.0.0", (value) =>
+        main[method](value),
+      ),
+    );
   }
   function provide(service, value) {
-    const provider = hub.provide(service, "1.0.0", value);
+    const provider = hub.provide(
+      service,
+      service === "status-bar" ? "2.0.0" : "1.0.0",
+      service === "status-bar" ? windowService(value) : value,
+    );
     providers.push(provider);
     return provider;
   }
