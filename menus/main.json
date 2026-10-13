@@ -8,7 +8,9 @@
           "submenu": [
             {
               "label": "Build Output",
-              "command": "build:toggle-panel"
+              "command": "build:toggle-panel",
+              "group": "panels",
+              "order": 10
             }
           ]
         }
