@@ -13,6 +13,8 @@ Fork of [noseglid/atom-build](https://github.com/noseglid/atom-build).
 - **Diagnostics**: parses named regular-expression captures, navigates results, and publishes to the linter.
 - **Workspace integration**: reports progress through busy-signal and the status bar when available.
 
+![Run a project target and inspect its actual process output.](.github/demo.png)
+
 ## Installation
 
 To install `build` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/build`.

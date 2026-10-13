@@ -1,0 +1,17 @@
+{
+  "title": "build",
+  "description": "Run a project target and inspect its actual process output.",
+  "recordedOn": "2026-10-13",
+  "sourceRevision": "c107db962fce2007b80af68cb71908695b47deb6",
+  "mode": "normal",
+  "fontSettings": "default",
+  "themeSourceRevision": "6564a9e21899b5541e9c8f8006f9be6d6d72e6ad",
+  "images": [
+    {
+      "file": "demo.png",
+      "label": "Run a project target and inspect its actual process output.",
+      "width": 1100,
+      "height": 730
+    }
+  ]
+}
