@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const temp = require("@lumine-code/fs-temp").track();
+const YamlLoader = require("../lib/yaml-loader");
 const {
   expandTarget,
   findConfig,
@@ -41,6 +42,43 @@ describe("build target loader", () => {
     const targets = await loadConfigTargets(directory);
 
     expect(targets[0].name).toBe("JSON");
+  });
+
+  it("loads YAML through its native parser while JSON never requests it", async () => {
+    const loading = spyOn(YamlLoader.prototype, "load").and.callThrough();
+    fs.writeFileSync(path.join(directory, ".lumine-build.yaml"), "name: YAML\ncmd: node\n");
+    expect((await loadConfigTargets(directory))[0].name).toBe("YAML");
+    expect(loading).toHaveBeenCalledTimes(1);
+    fs.writeFileSync(path.join(directory, ".lumine-build.json"), '{"name":"JSON","cmd":"node"}');
+    expect((await loadConfigTargets(directory))[0].name).toBe("JSON");
+    expect(loading).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not parse YAML when cancellation arrives during the import", async () => {
+    fs.writeFileSync(path.join(directory, ".lumine-build.yaml"), "name: YAML\ncmd: node\n");
+    let release;
+    let entered;
+    const importing = new Promise((resolve) => (entered = resolve));
+    const parser = { parse: jasmine.createSpy("parse") };
+    spyOn(YamlLoader.prototype, "load").and.callFake(() => {
+      entered();
+      return new Promise((resolve) => (release = resolve));
+    });
+    const controller = new AbortController();
+    const pending = loadConfigTargets(directory, { signal: controller.signal });
+    await importing;
+    controller.abort();
+    release(parser);
+    await expectAsync(pending).toBeRejectedWith(controller.signal.reason);
+    expect(parser.parse).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid YAML with the configuration filename", async () => {
+    fs.writeFileSync(path.join(directory, ".lumine-build.yml"), "targets: [\n");
+    await expectAsync(loadConfigTargets(directory)).toBeRejectedWithError(
+      SyntaxError,
+      /\.lumine-build.yml:/,
+    );
   });
 
   it("rejects malformed targets with their source name", () => {

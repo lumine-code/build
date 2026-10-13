@@ -63,6 +63,56 @@ describe("build", () => {
     expect(main.statusElement.dataset.state).toBe("passed");
   });
 
+  it("cancels a pending YAML import when a newer refresh selects another configuration", async () => {
+    main = (await lumine.packages.activatePackage("build")).mainModule;
+    await main.refreshTargets();
+    const YamlLoader = require("../lib/yaml-loader");
+    let entered;
+    let release;
+    const importing = new Promise((resolve) => (entered = resolve));
+    const parser = { parse: jasmine.createSpy("parse") };
+    spyOn(YamlLoader.prototype, "load").and.callFake(() => {
+      entered();
+      return new Promise((resolve) => (release = resolve));
+    });
+    fs.writeFileSync(path.join(directory, ".lumine-build.yaml"), "name: stale\ncmd: node\n");
+    const previous = main.refreshTargets();
+    await importing;
+    writeTarget({ name: "Current", cmd: "node" });
+    await main.refreshTargets();
+    release(parser);
+    await previous;
+    expect(parser.parse).not.toHaveBeenCalled();
+    expect(main.activeTarget.name).toBe("Current");
+  });
+
+  it("retires a YAML import on unload while the new generation remains usable", async () => {
+    main = (await lumine.packages.activatePackage("build")).mainModule;
+    await main.refreshTargets();
+    const previousMain = main;
+    const YamlLoader = require("../lib/yaml-loader");
+    let entered;
+    let release;
+    const importing = new Promise((resolve) => (entered = resolve));
+    const parser = { parse: jasmine.createSpy("parse") };
+    spyOn(YamlLoader.prototype, "load").and.callFake(() => {
+      entered();
+      return new Promise((resolve) => (release = resolve));
+    });
+    fs.writeFileSync(path.join(directory, ".lumine-build.yaml"), "name: stale\ncmd: node\n");
+    const previous = main.refreshTargets();
+    await importing;
+    await lumine.packages.unloadPackage("build");
+    writeTarget({ name: "Reactivated", cmd: "node" });
+    main = (await lumine.packages.activatePackage("build")).mainModule;
+    await main.refreshTargets();
+    release(parser);
+    await previous;
+    expect(main).not.toBe(previousMain);
+    expect(parser.parse).not.toHaveBeenCalled();
+    expect(main.activeTarget.name).toBe("Reactivated");
+  });
+
   it("saves every non-unmodified text editor before building", async () => {
     writeTarget({ name: "Save", cmd: "node", args: ["--version"] });
     const pack = await lumine.packages.activatePackage("build");
