@@ -1,20 +1,59 @@
 {
   "menu": [
     {
+      "label": "View",
+      "submenu": [
+        {
+          "label": "Toggle View",
+          "submenu": [
+            {
+              "label": "Build Output",
+              "command": "build:toggle-panel"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "label": "Packages",
       "submenu": [
         {
           "label": "Build",
           "submenu": [
-            { "label": "Run Active Target", "command": "build:trigger" },
-            { "label": "Stop", "command": "build:stop" },
-            { "type": "separator" },
-            { "label": "Select Target", "command": "build:select-target" },
-            { "label": "Refresh Targets", "command": "build:refresh-targets" },
-            { "type": "separator" },
-            { "label": "Toggle Output Panel", "command": "build:toggle-panel" },
-            { "label": "Next Diagnostic", "command": "build:next-error" },
-            { "label": "Previous Diagnostic", "command": "build:previous-error" }
+            {
+              "label": "Run Active Target",
+              "command": "build:trigger"
+            },
+            {
+              "label": "Stop",
+              "command": "build:stop"
+            },
+            {
+              "type": "separator"
+            },
+            {
+              "label": "Select Target",
+              "command": "build:select-target"
+            },
+            {
+              "label": "Refresh Targets",
+              "command": "build:refresh-targets"
+            },
+            {
+              "type": "separator"
+            },
+            {
+              "label": "Toggle Output Panel",
+              "command": "build:toggle-panel"
+            },
+            {
+              "label": "Next Diagnostic",
+              "command": "build:next-error"
+            },
+            {
+              "label": "Previous Diagnostic",
+              "command": "build:previous-error"
+            }
           ]
         }
       ]
