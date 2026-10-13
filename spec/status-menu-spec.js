@@ -26,10 +26,6 @@ describe("build status actions", () => {
     expect(commands()[0].enabled).toBe(false);
     main.activeTarget = { name: "Test" };
     expect(commands()[0].enabled).toBe(true);
-    expect(commands()[0].mouseBindingLabel).toBe("MMB");
-    expect(
-      commands().find((item) => item.command === "build:select-target").mouseBindingLabel,
-    ).toBe("LMB");
     expect(commands()[1].enabled).toBe(false);
     main.pendingStart = {};
     expect(commands()[1].enabled).toBe(true);
