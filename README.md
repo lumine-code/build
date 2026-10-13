@@ -32,6 +32,8 @@ Commands available in `lumine-workspace`:
 
 ## Usage
 
+Left click the status item to choose a target, or middle click to run the active target. Its context menu contains target selection, running and stopping, refreshing targets, output controls and diagnostic navigation.
+
 Create `.lumine-build.json` in a project root. A document may describe one target or contain a `targets` array:
 
 ```json
