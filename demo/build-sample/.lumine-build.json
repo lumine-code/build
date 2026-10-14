@@ -1,0 +1,7 @@
+{
+  "name": "Process samples",
+  "cmd": "node",
+  "args": [
+    "signal.js"
+  ]
+}

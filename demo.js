@@ -1,0 +1,39 @@
+// Authentic package usage. Run with lumine/script/demo.js; fixtures stay in demo/.
+module.exports = {
+  version: 1,
+  dependencies: ["language-javascript", "busy-signal"],
+  viewport: { width: 1100, height: 730 },
+  async before() {},
+  async prepare(context) {
+    const { lumine, state, fixture, open } = context;
+    const configPath = context.fixture("build-sample/.lumine-build.json");
+    const fs = require("node:fs");
+    const config = JSON.parse(fs.readFileSync(configPath));
+    config.cmd = context.nodePath;
+    fs.writeFileSync(configPath, JSON.stringify(config));
+    state.editor = await open("build-sample/signal.js");
+    await lumine.project.setPaths([fixture("build-sample")]);
+  },
+  scenes: [
+    {
+      id: "scene-1",
+      file: "demo.png",
+      caption: "Run a project target and inspect its actual process output.",
+      timeout: 60000,
+      async run(context) {
+        const { lumine } = context;
+        {
+          const b = lumine.packages.getActivePackage("build").mainModule;
+          await b.refreshTargets();
+          await b.runActiveTarget();
+        }
+      },
+      ready() {
+        return Boolean(
+          document.querySelector(".build-panel")?.innerText.includes("Mean amplitude: 0.42"),
+        );
+      },
+    },
+  ],
+  async cleanup() {},
+};
