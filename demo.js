@@ -6,11 +6,6 @@ module.exports = {
   async before() {},
   async prepare(context) {
     const { lumine, state, fixture, open } = context;
-    const configPath = context.fixture("build-sample/.lumine-build.json");
-    const fs = require("node:fs");
-    const config = JSON.parse(fs.readFileSync(configPath));
-    config.cmd = context.nodePath;
-    fs.writeFileSync(configPath, JSON.stringify(config));
     state.editor = await open("build-sample/signal.js");
     await lumine.project.setPaths([fixture("build-sample")]);
   },
