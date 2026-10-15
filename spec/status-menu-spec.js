@@ -2,6 +2,7 @@ describe("build status actions", () => {
   let main, element;
   beforeEach(async () => {
     jasmine.attachToDOM(lumine.workspace.getElement());
+    lumine.workspace.getElement().focus();
     main = (await lumine.packages.activatePackage("build")).mainModule;
     element = main.statusElement;
     lumine.workspace.getElement().appendChild(element);
