@@ -27,14 +27,14 @@
               "command": "build:trigger"
             },
             {
-              "label": "Stop",
+              "label": "Stop Build",
               "command": "build:stop"
             },
             {
               "type": "separator"
             },
             {
-              "label": "Select Target",
+              "label": "Select Target…",
               "command": "build:select-target"
             },
             {
