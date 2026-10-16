@@ -23,15 +23,18 @@ describe("build status actions", () => {
       "build:next-error",
       "build:previous-error",
     ]);
+    const canDispatch = (index) =>
+      lumine.commands.canDispatch(lumine.workspace.getElement(), commands()[index].command);
     main.activeTarget = null;
-    expect(commands()[0].enabled).toBe(false);
+    expect(canDispatch(0)).toBe(false);
     main.activeTarget = { name: "Test" };
-    expect(commands()[0].enabled).toBe(true);
-    expect(commands()[1].enabled).toBe(false);
+    expect(canDispatch(0)).toBe(true);
+    expect(canDispatch(1)).toBe(false);
     main.pendingStart = {};
-    expect(commands()[1].enabled).toBe(true);
+    expect(canDispatch(1)).toBe(true);
   });
   it("dispatches primary and middle actions, never executes the right button", () => {
+    main.activeTarget = { name: "Test" };
     const select = spyOn(main, "selectTarget");
     const run = spyOn(main, "runActiveTarget");
     element.dispatchEvent(new MouseEvent("click", { button: 0 }));
