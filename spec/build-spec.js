@@ -235,6 +235,69 @@ describe("build", () => {
       expect(main.panel).toBeNull();
     });
 
+    it("does not start an outgoing project's target after project restoration", async () => {
+      const service = deferred();
+      spyOn(lumine.packages, "requestService").and.returnValue(service.promise);
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      const pending = main.runActiveTarget();
+      const nextDirectory = fs.realpathSync.native(temp.mkdirSync("lumine-build-next-"));
+      await lumine.project.setState([nextDirectory]);
+      service.resolve();
+      expect(await pending).toBeNull();
+      expect(run).not.toHaveBeenCalled();
+    });
+
+    it("retires a pending build before the incoming storage scope precedes its roots", async () => {
+      const service = deferred();
+      const rebound = deferred();
+      const resume = deferred();
+      spyOn(lumine.packages, "requestService").and.returnValue(service.promise);
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      const pending = main.runActiveTarget();
+      const switchProject = lumine.packages.storage.switchProject.bind(lumine.packages.storage);
+      spyOn(lumine.packages.storage, "switchProject").and.callFake(async (paths) => {
+        await switchProject(paths);
+        rebound.resolve();
+        await resume.promise;
+      });
+      const nextDirectory = fs.realpathSync.native(temp.mkdirSync("lumine-build-rebind-next-"));
+      const transition = lumine.project.setState([nextDirectory]);
+      try {
+        await rebound.promise;
+        expect(lumine.project.getPaths()).toEqual([directory]);
+        service.resolve();
+        expect(await pending).toBeNull();
+        expect(run).not.toHaveBeenCalled();
+      } finally {
+        resume.resolve();
+        await transition;
+      }
+    });
+
+    it("does not start an outgoing project's target after a delayed save", async () => {
+      const saving = deferred();
+      const started = deferred();
+      spyOn(lumine.packages, "requestService").and.resolveTo();
+      const sourcePath = path.join(directory, "source.js");
+      fs.writeFileSync(sourcePath, "old text");
+      const editor = await lumine.workspace.open(sourcePath);
+      editor.setText("new text");
+      spyOn(editor, "save").and.callFake(() => {
+        started.resolve();
+        return saving.promise;
+      });
+      spyOn(lumine.workspace, "confirmClose").and.resolveTo(true);
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      lumine.config.set("build.saveOnBuild", true);
+      const pending = main.runActiveTarget();
+      await started.promise;
+      const nextDirectory = fs.realpathSync.native(temp.mkdirSync("lumine-build-save-next-"));
+      await lumine.project.setState([nextDirectory]);
+      saving.resolve();
+      expect(await pending).toBeNull();
+      expect(run).not.toHaveBeenCalled();
+    });
+
     it("does not start after deactivation while the editor save waits", async () => {
       const sourcePath = path.join(directory, "source.js");
       fs.writeFileSync(sourcePath, "old text");
