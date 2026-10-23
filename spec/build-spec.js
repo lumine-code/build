@@ -206,6 +206,33 @@ describe("build", () => {
     expect(main.selectListHost.isVisible()).toBe(false);
   });
 
+  it("keeps equally named build targets distinct and retains the chosen command after reordering", async () => {
+    const first = { cmd: "node", args: ["--version"] };
+    const second = { cmd: "node", args: ["--help"] };
+    writeTarget([first, second]);
+    main = (await lumine.packages.activatePackage("build")).mainModule;
+    await main.selectTarget();
+    expect(main.selectList.getStatus()).toBeNull();
+    const targets = main.selectList.getItems();
+    expect(targets.length).toBe(2);
+    if (targets.length !== 2) return;
+    expect(main.selectList.getItemId(targets[0])).not.toBe(main.selectList.getItemId(targets[1]));
+    await main.selectList.selectItem(targets[1]);
+    await main.selectList.confirmSelection();
+    writeTarget([second, first]);
+    await main.refreshTargets();
+    expect(main.activeTarget.args).toEqual(["--help"]);
+    await main.selectTarget();
+    expect(main.selectList.getItems().length).toBe(2);
+    writeTarget([second, first, first]);
+    await main.refreshTargets();
+    expect(main.selectList.getItemCount()).toBe(3);
+    expect(
+      new Set(main.selectList.getItems().map((target) => main.selectList.getItemId(target))).size,
+    ).toBe(3);
+    expect(main.activeTarget.args).toEqual(["--help"]);
+  });
+
   describe("pending build ownership", () => {
     const deferred = () => {
       let resolve, reject;
