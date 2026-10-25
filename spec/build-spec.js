@@ -35,6 +35,28 @@ describe("build", () => {
     await lumine.packages.deactivatePackage("build");
   });
 
+  it("skips automatic builds for None and resumes after a grammar is selected", async () => {
+    const language = await lumine.packages.activatePackage("language-javascript");
+    await language.resourceLoadPromise;
+    const sourcePath = path.join(directory, "source.js");
+    fs.writeFileSync(sourcePath, "original");
+    const editor = await lumine.workspace.open(sourcePath);
+    const grammar = editor.getGrammar();
+    const pkg = await lumine.packages.activatePackage("build");
+    main = pkg.mainModule;
+    spyOn(main, "projectPathForEditor").and.returnValue(directory);
+    const run = spyOn(main, "runActiveTarget").and.resolveTo();
+    lumine.config.set("build.buildOnSave", true);
+    editor.setGrammar(lumine.grammars.nullGrammar);
+    editor.setText("without grammar");
+    await editor.save();
+    expect(run).not.toHaveBeenCalled();
+    editor.setGrammar(grammar);
+    editor.setText("with grammar");
+    await editor.save();
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
   it("closes the center editor from build output while retaining the output panel", async () => {
     const editor = await lumine.workspace.open();
     const pack = await lumine.packages.activatePackage("build");
