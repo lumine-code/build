@@ -111,4 +111,65 @@ describe("build target loader", () => {
     expect(expanded.args).toEqual([directory, "main.js", "selected", "5"]);
     expect(expanded.env.ROOT).toBe(path.dirname(editorPath));
   });
+
+  it("does not read an unrelated selection when the target does not use it", () => {
+    const editor = {
+      getPath: () => null,
+      getCursorBufferPosition: () => null,
+      getSelectedText: jasmine
+        .createSpy("getSelectedText")
+        .and.throwError("unbounded selection read"),
+    };
+    const target = normalizeTarget({ cmd: "node", args: ["--test"] }, directory, "provider");
+    expect(expandTarget(target, { projectPath: directory, editor }).args).toEqual(["--test"]);
+    expect(editor.getSelectedText).not.toHaveBeenCalled();
+  });
+
+  it("reads a requested selection once across command, args, cwd and environment", () => {
+    const editor = {
+      getPath: () => null,
+      getCursorBufferPosition: () => null,
+      getSelectedText: jasmine.createSpy("getSelectedText").and.returnValue("chosen"),
+    };
+    const target = normalizeTarget(
+      {
+        cmd: "{SELECTION}",
+        args: ["{SELECTION}", "{SELECTION}"],
+        cwd: "{SELECTION}",
+        env: { VALUE: "{SELECTION}" },
+      },
+      directory,
+      "provider",
+    );
+    const expanded = expandTarget(target, { projectPath: directory, editor });
+    expect(expanded.cmd).toBe("chosen");
+    expect(expanded.args).toEqual(["chosen", "chosen"]);
+    expect(expanded.cwd).toBe(path.resolve(directory, "chosen"));
+    expect(expanded.env.VALUE).toBe("chosen");
+    expect(editor.getSelectedText).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an explicitly requested oversized UTF-16 selection before materialization", () => {
+    const limit = require("node:buffer").constants.MAX_STRING_LENGTH;
+    const editor = {
+      getPath: () => null,
+      getCursorBufferPosition: () => null,
+      getSelectedBufferRange: () => ({ start: { offset: 7 }, end: { offset: 7 + limit + 1 } }),
+      getBuffer: () => ({ characterIndexForPosition: (point) => point.offset }),
+      getSelectedText: jasmine
+        .createSpy("getSelectedText")
+        .and.throwError("unbounded selection read"),
+    };
+    const target = normalizeTarget({ cmd: "node", args: ["{SELECTION}"] }, directory, "provider");
+    let failure;
+    try {
+      expandTarget(target, { projectPath: directory, editor });
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure instanceof RangeError).toBe(true);
+    expect(failure.code).toBe("ERR_BUILD_SELECTION_TOO_LARGE");
+    expect(failure.length).toBe(limit + 1);
+    expect(editor.getSelectedText).not.toHaveBeenCalled();
+  });
 });

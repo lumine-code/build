@@ -53,7 +53,7 @@ Create `.lumine-build.json` in a project root. A document may describe one targe
 }
 ```
 
-`.lumine-build.yaml` and `.lumine-build.yml` accept the same shape. Targets support `name`, `cmd`, string `args`, relative `cwd`, string `env` values, `shell`, `commandName`, and `errorMatch`. The placeholders `{PROJECT_PATH}`, `{FILE_ACTIVE}`, `{FILE_ACTIVE_PATH}`, `{FILE_ACTIVE_NAME}`, `{SELECTION}`, `{ROW}`, and `{COLUMN}` are expanded immediately before a run.
+`.lumine-build.yaml` and `.lumine-build.yml` accept the same shape. Targets support `name`, `cmd`, string `args`, relative `cwd`, string `env` values, `shell`, `commandName`, and `errorMatch`. The placeholders `{PROJECT_PATH}`, `{FILE_ACTIVE}`, `{FILE_ACTIVE_PATH}`, `{FILE_ACTIVE_NAME}`, `{SELECTION}`, `{ROW}`, and `{COLUMN}` are expanded immediately before a run. Selection text is read only when a target uses `{SELECTION}`; a selection exceeding the runtime string limit rejects that expansion instead of truncating it.
 
 ## Customization
 
