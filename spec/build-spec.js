@@ -55,6 +55,7 @@ describe("build", () => {
     editor.setText("with grammar");
     await editor.save();
     expect(run).toHaveBeenCalledTimes(1);
+    expect(run.calls.mostRecent().args).toEqual([{ sourceEditor: editor }]);
   });
 
   it("closes the center editor from build output while retaining the output panel", async () => {
@@ -368,6 +369,38 @@ describe("build", () => {
       saving.resolve();
       expect(await pending).toBeNull();
       expect(run).not.toHaveBeenCalled();
+    });
+
+    it("retires an automatic start across None and resumes before old discovery settles", async () => {
+      const language = await lumine.packages.activatePackage("language-javascript");
+      await language.resourceLoadPromise;
+      const sourcePath = path.join(directory, "source.js");
+      fs.writeFileSync(sourcePath, "source");
+      const editor = await lumine.workspace.open(sourcePath);
+      const grammar = editor.getGrammar();
+      const oldService = deferred();
+      const newService = deferred();
+      spyOn(lumine.packages, "requestService").and.returnValues(
+        oldService.promise,
+        newService.promise,
+      );
+      const run = spyOn(main, "runTarget").and.returnValue("started");
+      const oldPending = main.runActiveTarget({ sourceEditor: editor });
+      try {
+        lumine.grammars.assignGrammar(editor, lumine.grammars.nullGrammar);
+        expect(main.pendingStart).toBeNull();
+        lumine.grammars.assignGrammar(editor, grammar);
+        const replacement = main.runActiveTarget({ sourceEditor: editor });
+        newService.resolve();
+        expect(await replacement).toBe("started");
+        oldService.resolve();
+        expect(await oldPending).toBeNull();
+        expect(run).toHaveBeenCalledTimes(1);
+      } finally {
+        oldService.resolve();
+        newService.resolve();
+        editor.destroy();
+      }
     });
 
     it("owns only one start while service discovery is pending", async () => {

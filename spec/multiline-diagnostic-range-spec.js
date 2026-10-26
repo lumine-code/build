@@ -100,6 +100,48 @@ describe("Build native multiline diagnostic ranges", () => {
     expect(main.statusElement.dataset.state).toBe("passed");
   }
 
+  it("retires only its automatic process and ignores stale callbacks after a manual replacement", async () => {
+    const language = await lumine.packages.activatePackage("language-text");
+    await language.resourceLoadPromise;
+    const grammar = lumine.grammars.grammarForScopeName("text.plain");
+    lumine.grammars.assignGrammar(editor, grammar);
+    const grammarWatch = spyOn(editor, "onDidChangeGrammar").and.callThrough();
+    const automatic = await main.runActiveTarget({ sourceEditor: editor });
+    const staleCancellation = grammarWatch.calls.mostRecent().args[0];
+    expect(automatic).toBe(child);
+    const other = lumine.workspace.buildTextEditor();
+    try {
+      lumine.grammars.assignGrammar(other, grammar);
+      lumine.grammars.assignGrammar(other, lumine.grammars.nullGrammar);
+      expect(child.kill).not.toHaveBeenCalled();
+      lumine.grammars.assignGrammar(editor, lumine.grammars.nullGrammar);
+      expect(child.kill).toHaveBeenCalledOnceWith("SIGKILL");
+      expect(main.activeProcess).toBeNull();
+
+      const manual = new EventEmitter();
+      manual.stdout = new EventEmitter();
+      manual.stderr = new EventEmitter();
+      manual.kill = jasmine.createSpy("manual child kill");
+      launch.and.returnValue(manual);
+      expect(await main.runActiveTarget()).toBe(manual);
+      staleCancellation();
+      child.stdout.emit("data", Buffer.from("source.txt:1:1:1:2: Stale diagnostic\n"));
+      child.stderr.emit("data", Buffer.from("Stale failure\n"));
+      child.emit("close", 1, null);
+      expect(main.activeProcess).toBe(manual);
+      expect(manual.kill).not.toHaveBeenCalled();
+      expect(main.statusElement.dataset.state).toBe("running");
+      expect(main.panel.getText()).not.toContain("Stale");
+      expect(messages).toEqual([]);
+      manual.stdout.emit("data", Buffer.from("current output\n"));
+      manual.emit("close", 0, null);
+      expect(main.panel.getText()).toContain("current output");
+      expect(main.statusElement.dataset.state).toBe("passed");
+    } finally {
+      other.destroy();
+    }
+  });
+
   it("keeps an earlier end column on a later line", async () => {
     await report("source.txt:1:10:2:2: Owned diagnostic\n", [
       [0, 9],
