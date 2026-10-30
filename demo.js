@@ -21,11 +21,18 @@ module.exports = {
           const b = lumine.packages.getActivePackage("build").mainModule;
           await b.refreshTargets();
           await b.runActiveTarget();
+          lumine.workspace.getBottomDock().setState({ size: 260 });
         }
       },
-      ready() {
+      ready({ lumine }) {
+        const panel = document.querySelector(".build-panel");
+        const dock = lumine.workspace.getBottomDock();
         return Boolean(
-          document.querySelector(".build-panel")?.innerText.includes("Mean amplitude: 0.42"),
+          dock.isVisible() &&
+          dock.getElement().contains(panel) &&
+          panel?.dataset.state === "passed" &&
+          panel.querySelector(".build-panel-title")?.textContent === "Process samples" &&
+          panel.querySelector(".build-output")?.textContent.includes("Mean amplitude: 0.42"),
         );
       },
     },

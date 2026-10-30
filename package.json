@@ -28,6 +28,9 @@
   "engines": {
     "lumine": "^1.0.0"
   },
+  "deserializers": {
+    "build/BuildPanel": "deserializeBuildPanel"
+  },
   "scripts": {
     "test": "lumine --test spec",
     "lint": "eslint . --max-warnings 0",
@@ -58,18 +61,6 @@
         "Hidden"
       ],
       "default": "Show on Build"
-    },
-    "panelOrientation": {
-      "title": "Panel Orientation",
-      "description": "Choose the workspace edge for build output.",
-      "type": "string",
-      "enum": [
-        "Top",
-        "Right",
-        "Bottom",
-        "Left"
-      ],
-      "default": "Bottom"
     },
     "clearOnBuild": {
       "title": "Clear Output Before Running",

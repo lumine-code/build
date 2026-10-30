@@ -23,7 +23,6 @@ describe("build", () => {
     lumine.project.setPaths([directory]);
     lumine.config.set("build.saveOnBuild", false);
     lumine.config.set("build.panelVisibility", "Show on Build");
-    lumine.config.set("build.panelOrientation", "Bottom");
     lumine.config.set("build.clearOnBuild", true);
     lumine.config.set("build.scrollToEnd", true);
     lumine.config.set("build.maxOutputLines", 10000);
@@ -62,12 +61,13 @@ describe("build", () => {
     const editor = await lumine.workspace.open();
     const pack = await lumine.packages.activatePackage("build");
     const panel = pack.mainModule.ensurePanel();
-    panel.show();
+    await panel.show();
     panel.append("retained build output", "stdout");
 
     await lumine.commands.dispatch(panel.output, "core:close");
 
-    expect(panel.panel.isVisible()).toBe(true);
+    expect(lumine.workspace.getBottomDock().isVisible()).toBe(true);
+    expect(lumine.workspace.getBottomDock().getPaneItems()).toContain(panel);
     expect(panel.getText()).toBe("retained build output");
     expect(editor.isDestroyed()).toBe(true);
   });

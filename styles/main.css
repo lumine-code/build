@@ -1,50 +1,140 @@
 .build-panel {
   display: flex;
   flex-direction: column;
-  min-width: 16em;
-  min-height: 8em;
-  max-height: 45vh;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   color: var(--text-color);
   background: var(--tool-panel-background-color, var(--base-background-color));
+  --build-state-color: var(--text-color-subtle);
 }
 
-.build-panel > header {
+.build-panel .build-panel-header {
   display: flex;
   flex: none;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 6px 12px;
   align-items: center;
-  padding: 4px 6px;
+  min-height: 36px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--base-border-color);
 }
 
-.build-panel-title {
-  flex: 1;
+.build-panel .build-panel-state {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+  color: var(--build-state-color);
+  white-space: nowrap;
+}
+
+.build-panel .build-panel-state-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.build-panel .build-panel-title {
+  flex: 1 1 12em;
+  min-width: 0;
   overflow: hidden;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.build-output {
+.build-panel .build-panel-summary {
+  color: var(--text-color-subtle);
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.build-panel .build-panel-actions {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+}
+
+.build-panel .build-panel-body {
+  display: flex;
   flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.build-panel .build-output {
+  flex: 1;
+  min-width: 0;
   min-height: 0;
   margin: 0;
-  padding: 8px;
+  padding: 10px 12px;
+  border: 0;
   overflow: auto;
   font-family: var(--editor-font-family, monospace);
   font-size: var(--editor-font-size, 13px);
-  line-height: 1.45;
+  line-height: var(--build-output-line-height, 1.5);
   color: var(--text-color);
+  background: transparent;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   user-select: text;
 }
 
-.build-output-command {
+.build-panel .build-output-command {
   color: var(--text-color-subtle);
 }
 
-.build-output-stderr {
+.build-panel .build-output-stderr {
   color: var(--text-color-error, var(--text-color));
+}
+
+.build-panel .build-panel-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: var(--text-color-subtle);
+  text-align: center;
+}
+
+.build-panel .build-panel-empty-title {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.build-panel .build-panel-empty p {
+  margin: 0;
+}
+
+.build-panel .build-output[hidden],
+.build-panel .build-panel-empty[hidden] {
+  display: none;
+}
+
+.build-panel[data-state="running"] {
+  --build-state-color: var(--text-color-info);
+}
+
+.build-panel[data-state="passed"] {
+  --build-state-color: var(--text-color-success);
+}
+
+.build-panel[data-state="failed"] {
+  --build-state-color: var(--text-color-error);
+}
+
+.build-panel[data-state="stopped"] {
+  --build-state-color: var(--text-color-warning);
 }
 
 .build-status {

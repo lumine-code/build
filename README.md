@@ -8,7 +8,7 @@ Fork of [noseglid/atom-build](https://github.com/noseglid/atom-build).
 
 - **Project targets**: loads safe JSON or YAML target definitions from the project root.
 - **Provider targets**: combines configuration with targets contributed through a versioned service.
-- **Streaming output**: shows standard output and errors in a dockable, bounded panel.
+- **Streaming output**: shows standard output and errors in a bottom-dock tab with build state and output controls.
 - **Process control**: saves modified editors, prevents overlapping runs, and escalates stalled termination.
 - **Diagnostics**: parses named regular-expression captures, navigates results, and publishes to the linter.
 - **Workspace integration**: reports progress through busy-signal and the status bar when available.
@@ -36,6 +36,8 @@ Commands available in `lumine-workspace`:
 
 Left click the status item to choose a target, or middle click to run the active target. Its context menu contains target selection, running and stopping, refreshing targets, output controls and diagnostic navigation.
 
+Build output opens in the bottom dock. Resize the dock to give the log more room, and use its tab to close the view. The toolbar shows the target and run state, with controls to stop the process, clear the log, or copy its output.
+
 Create `.lumine-build.json` in a project root. A document may describe one target or contain a `targets` array:
 
 ```json
@@ -61,8 +63,8 @@ Adjust the output surface in your `styles.css`:
 
 ```css
 .build-panel {
-  max-height: 55vh;
   background: var(--tool-panel-background-color);
+  --build-output-line-height: 1.6;
 }
 ```
 
